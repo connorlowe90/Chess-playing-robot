@@ -5,10 +5,21 @@
 #include <stdlib.h>
 #include <math.h>
 
+#define PI 3.1415926535897932384626433832795
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+
 // Size of the printer chassis, tool cannot move past these limits
 const float MACHINE_BOUND_X = 457.2;
 const float MACHINE_BOUND_Y = 584.2;
 const float MACHINE_BOUND_Z = 254.0;
+
 const int MICROSTEP_FACTOR = 8;
 
 // Determines the distance the head will move for a rotation of the motor. Likely will need to be calibrated

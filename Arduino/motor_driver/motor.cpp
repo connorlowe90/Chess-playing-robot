@@ -1,5 +1,7 @@
 #include "motor.h"
-#include <Arduino.h>    // Only for serial debug messages
+#include <stdlib.h>
+#include <math.h>
+// #include <Arduino.h>    // Only for serial debug messages
 
 // Current position of the toolhead
 float currentX = 0.0;
@@ -7,11 +9,6 @@ float currentY = 0.0;
 
 // Moves the X and Y axes in sync so the toolhead moves in a straight line. Moves relative to current position
 void moveXYRelative(float distanceX, float distanceY, float speed, float accel){
-  Serial.print("Relative move: ");
-  Serial.print(distanceX);
-  Serial.print(", ");
-  Serial.println(distanceY);
-  int accelSteps = ceil(speed/accel);
 
   // Calculate the angle of motion
   float angle;
@@ -26,8 +23,14 @@ void moveXYRelative(float distanceX, float distanceY, float speed, float accel){
   }
 
   // Calculate the speed of the x and y axes so the toolhead is moving at the given speed
-  float speedX = sin(angle) * speed;
-  float speedY = cos(angle) * speed;
+  float factorX = sin(angle);
+  float factorY = cos(angle);
+  float speedX = factorX * speed;
+  float speedY = factorY * speed;
+  float accelX = factorX * accel;
+  float accelY = factorY * accel;
+  float jerkX = pow(accelX,2) / speedX;
+  float jerkY = pow(accelY,2) / speedY;
 
   // Calculate the steps needed to travel the proper distance
   // This needs to be doubled because each loop will toggle the state of the step pin, instead of a full On-Off cycle
@@ -36,8 +39,10 @@ void moveXYRelative(float distanceX, float distanceY, float speed, float accel){
 
   /* Acceleration values. The speed will ramp up over the course of accelSteps cycles to 
   it's full speed and then ramp back down over the same amount of cycles to stop*/
-  float speedStepX = speedX / (2*accelSteps);
-  float speedStepY = speedY / (2*accelSteps);
+  float currentAccelX = 0;
+  float currentAccelY = 0;
+  unsigned long inflectionStepX = pow(accelX,2)/pow(6*jerkX,2);
+  unsigned long inflectionStepY = pow(accelY,2)/pow(6*jerkY,2);
 
   // Set the directions of the XY motors
   setDirection(distanceX, distanceY);
@@ -47,22 +52,16 @@ void moveXYRelative(float distanceX, float distanceY, float speed, float accel){
   unsigned long timerY = 0;
 
   // The current speed of each axis, from which the pulse period is calculated. This will be ramped up and down for acceleration.
-  float currentSpeedX = speedStepX;
-  float currentSpeedY = speedStepY;
+  float currentSpeedX = 0;
+  float currentSpeedY = 0;
 
   // The current pulse period for each axis.
-  long currentPulseX = 1000000/(speedStepX*XYstepsPerMM);
-  long currentPulseY = 1000000/(speedStepY*XYstepsPerMM);
-
-  // The minimum pulse period (max speed) that each axis will hit
-  long minPulseX = 1000000/(speedX*XYstepsPerMM);
-  long minPulseY = 1000000/(speedY*XYstepsPerMM);
+  long currentPulseX = 1000000/(jerkX*XYstepsPerMM);
+  long currentPulseY = 1000000/(jerkY*XYstepsPerMM);
 
   // Calculate the minimum delay time needed to hit both timer values
-  unsigned long gcd = gcd_recurse(minPulseX,minPulseY);
-  
-  // Bottom out the delay value so the board can still delay accurately
-  unsigned long timeStep = max(gcd,10);
+  // unsigned long gcd = gcd_recurse(minPulseX,minPulseY);
+  unsigned long timeStep = 10;
 
   // Amount of steps for each axis left in the current travel
   long stepsLeftX = stepsX;
@@ -71,62 +70,59 @@ void moveXYRelative(float distanceX, float distanceY, float speed, float accel){
   // Current state of the step pins of each axis, will be toggled for motor movement
   bool stepStateX = false;
   bool stepStateY = false;
-
-//  Serial.print("Initial delay is ");
-//  Serial.print(currentPulseX);
-//  Serial.print(" us, ");
-//  Serial.print(currentPulseY);
-//  Serial.println(" us");
-//  
-//  Serial.print("Min delay is ");
-//  Serial.print(minPulseX);
-//  Serial.print(" us, ");
-//  Serial.print(minPulseY);
-//  Serial.println(" us");
-//  
-//  Serial.print("GCD is ");
-//  Serial.print(timeStep);
-//  Serial.println(" us");
   
   while (stepsLeftX > 0 || stepsLeftY > 0){
-    // The arduino cannot delay accurately for less than 3us.
     delayMicro(timeStep);   
     timerX += timeStep;
     timerY += timeStep;
-//    Serial.print(stepsLeftX);
-//    Serial.print(", ");
-//    Serial.println(stepsLeftY);
 
     // If the X motor still needs to move and it has been the correct time since the last pulse
     if(stepsLeftX > 0 && timerX >= currentPulseX){
       // Reset the timer
       timerX = 0;
-      // If nearing the end of the travel, decelerate.
-      if(stepsLeftX <= accelSteps * 2){
-        currentSpeedX -= speedStepX;
-        currentPulseX = 1000000/(currentSpeedX*XYstepsPerMM);
-      //If still in the start of the travel, accelerate.
-      } else if(stepsX - stepsLeftX < accelSteps * 2){
-        currentSpeedX += speedStepX;
-        currentPulseX = 1000000/(currentSpeedX*XYstepsPerMM);
-      }
+
+      // Update acceleration
+      if(stepsX - stepsLeftX < inflectionStepX){          // 1st section, ramp up of acceleration
+        currentAccelX += jerkX;
+      } else if(stepsX - stepsLeftX < inflectionStepX*2){ // 2nd section, ramp down of acceleration
+        currentAccelX -= jerkX;
+      } else if(stepsLeftX < inflectionStepX){            // 4th section, ramp up of deceleration
+        currentAccelX += jerkX;
+      } else if(stepsLeftX < inflectionStepX*2){          // 5th section, ramp down of deceleration
+        currentAccelX -= jerkX;
+      }                                                   // 3rd section, coast (acceleration doesn't change)
+      
+      // Update speed and pulse period
+      currentSpeedX += currentAccelX;
+      currentPulseX = 1000000/(currentSpeedX*XYstepsPerMM);
+
+      // Step the motor
       stepStateX = !stepStateX;
       pinWrite(X,step,stepStateX);
       stepsLeftX--;
     }
+    
     // If the Y motor still needs to move and it has been the correct time since the last pulse
-    if(stepsLeftY > 0 && timerY >= currentPulseY){
+    if(stepsLeftX > 0 && timerY >= currentPulseY){
       // Reset the timer
       timerY = 0;
-      // If nearing the end of the travel, decelerate.
-      if(stepsLeftY <= accelSteps * 2){
-        currentSpeedY -= speedStepY;
-        currentPulseY = 1000000/(currentSpeedY*XYstepsPerMM); 
-      //If still in the start of the travel, accelerate.
-      } else if(stepsY - stepsLeftY < accelSteps * 2){
-        currentSpeedY += speedStepY;
-        currentPulseY = 1000000/(currentSpeedY*XYstepsPerMM);
-      }
+
+      // Update acceleration
+      if(stepsY - stepsLeftY < inflectionStepY){          // 1st section, ramp up of acceleration
+        currentAccelY += jerkY;
+      } else if(stepsY - stepsLeftY < inflectionStepY*2){ // 2nd section, ramp down of acceleration
+        currentAccelY -= jerkY;
+      } else if(stepsLeftY < inflectionStepY){            // 4th section, ramp up of deceleration
+        currentAccelY += jerkY;
+      } else if(stepsLeftY < inflectionStepY*2){          // 5th section, ramp down of deceleration
+        currentAccelY -= jerkY;
+      }                                                   // 3rd section, coast (acceleration doesn't change)
+      
+      // Update speed and pulse period
+      currentSpeedY += currentAccelY;
+      currentPulseY = 1000000/(currentSpeedY*XYstepsPerMM);
+
+      // Step the motor
       stepStateY = !stepStateY;
       pinWrite(Y,step,stepStateY);
       stepsLeftY--;
@@ -150,10 +146,6 @@ void setHome(){
 }
 
 void moveXYAbsolute(float x, float y, int speed, int accel){
-  Serial.print("Moving to ");
-  Serial.print(x);
-  Serial.print(", ");
-  Serial.println(y);
   moveXYRelative(x-currentX, y-currentY, speed, accel);
   currentX = x;
   currentY = y;
