@@ -7,9 +7,9 @@ const int X_step_pin = 5;
 const int X_dir0_pin = 3;
 const int X_dir1_pin = 4;
 
-const int Y_step_pin = 5;
-const int Y_dir0_pin = 3;
-const int Y_dir1_pin = 4;
+const int Y_step_pin = 8;
+const int Y_dir0_pin = 7;
+const int Y_dir1_pin = 6;
 
 void initPins(){
   Serial.begin(9600);
@@ -52,6 +52,11 @@ void pinWrite(axis writeAxis, pin writePin, int state){
   }
 }
 
-void delayMicro(int time){
-  delayMicroseconds(time);
+void delayMicro(long time){
+  if(time > 1000){
+    delay(time/1000);
+    delay(time%1000);
+  } else {
+    delayMicroseconds(time);
+  }
 }

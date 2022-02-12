@@ -12,6 +12,6 @@ void initPins();
 void pinWrite(axis writeAxis, pin writePin, int state);
 
 // Delays a given amount of microseconds (blocking)
-void delayMicro(int time);
+void delayMicro(long time);
 
 #endif
