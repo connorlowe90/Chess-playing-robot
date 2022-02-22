@@ -3,6 +3,11 @@ import numpy as np
 from skimage import data,io,filters
 from skimage.measure import compare_ssim as ssim
 from boardNotation import *
+from stockfish import Stockfish
+from os import *
+
+# engine using stockfish package
+stockfish = Stockfish('/home/pi/ee475/Chess-Engines-for-Raspberry-Pi-by-Al-master/arm7l/t-fruit')
 
 # breaks 2 images into 2 different 64 image arrays for each square, sized 64pixelsx64pixels
 def getImgSlide(imgA, imgB):

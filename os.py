@@ -16,7 +16,8 @@ from chess import *
 from stockfish import Stockfish
 
 # engine using stockfish package
-stockfish = Stockfish('/home/pi/ee475/Chess-Engines-for-Raspberry-Pi-by-Al-master/arm7l/t-fruit')
+stockfish = Stockfish('/home/pi/ee475/Chess-Engines-for-Raspberry-Pi-by-Al-master/arm7l/stockfish231')
+print(stockfish.get_best_move())
 
 # Chessboard detection functions
 from imgUtils.detectRect import *
@@ -77,16 +78,28 @@ GPIO.add_event_detect(button2, GPIO.RISING,
                       callback=button_press_callback,
                       bouncetime=7000)
 
+# hint_press_callback() function is a
+# function that is will tell you what
+# diff you are at
+def hint_press_callback(channel):
+	stockfish.set_fen_position(board.fen())
+	stockfish.set_skill_level(20)
+	edit_me = get_best_move(str(chess.Move.from_uci(stockfish.get_best_move())), board)
+	lcd.clear()
+	lcd.write_string('Best move is: \r\n' + str(edit_me))
+	time.sleep(5)
+	lcd.clear()
+    
 # Event handler for if someone presses
 # the hint button. The bounce time may
 # need to be changed.
 GPIO.add_event_detect(hint_button, GPIO.RISING,
                       callback=hint_press_callback,
                       bouncetime=7000)   
+    
 # setup LED outputs
 setup_LEDs()  # Setup the led pins and pot for it
-
-
+	
 ###########################
 # initialize game
 ###########################
@@ -102,7 +115,7 @@ imgB = detectRectPCorners(image_pathStart, corners)
 cv2.imwrite(image_pathStart, imgB)
 
 # get difficulty level
-difficultyWaitForPress()
+diff = difficultyWaitForPress(stockfish)
 	
 # start game
 while 1:
@@ -125,9 +138,12 @@ while 1:
 
 	# if user move if valid push else not
 	if chess.Move.from_uci(move) in board.legal_moves:
+		# user move
 		board.push(chess.Move.from_uci(move))
 		check_game_state(board)
 		
+		# computer move
+		stockfish.set_skill_level(diff)
 		stockfish.set_fen_position(board.fen())
 		newMove = stockfish.get_best_move()
 		stm.write("{}\n".format(newMove))
@@ -140,6 +156,8 @@ while 1:
 	# wait for done signal
 	#stm.read(1)
 	waitForUserToMovePress()
+	
+	print(board.fen())
 	
 	os.system("espeak -s60 \"Ready\"") 
 	
