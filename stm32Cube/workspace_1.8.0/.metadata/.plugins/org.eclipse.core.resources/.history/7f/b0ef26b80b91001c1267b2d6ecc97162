@@ -1,0 +1,77 @@
+#include "board.h"
+#include "main.h"
+// For the Arduino board
+
+// X_step_pin = PC14
+// X_dir0_pin = PC15
+// X_dir1_pin = PC13
+//
+// Y_step_pin = PC5
+// Y_dir0_pin = PA1
+// Y_dir1_pin = PA2
+
+// Z_step_pin = PA3
+// Z_dir0_pin = PA3
+
+void initPins(){
+  TIM6->PSC = 89;
+  TIM6->ARR = 0xffff;
+  TIM6->CR1 |= (1 << 0);
+}
+
+void pinWrite(axis writeAxis, pin writePin, int state){
+	int shift = state * 16;
+  switch(writeAxis){
+    case X:
+      switch(writePin){
+        case step:
+        	GPIOC->BSRR |= (1<<14) << shift;
+          break;
+        case dir0:
+        	GPIOC->BSRR |= (1<<15) << shift;
+          break;
+        case dir1:
+        	GPIOC->BSRR |= (1<<13) << shift;
+          break;
+      }
+      break;
+      case Y:
+      switch(writePin){
+        case step:
+        	GPIOC->BSRR |= (1<<5) << shift;
+          break;
+        case dir0:
+        	GPIOA->BSRR |= (1<<1) << shift;
+          break;
+        case dir1:
+        	GPIOA->BSRR |= (1<<2) << shift;
+          break;
+      }
+      break;
+      case Z:
+		switch(writePin){
+		  case step:
+			GPIOA->BSRR |= (1<<3) << shift;
+			break;
+		  case dir0:
+			GPIOA->BSRR |= (1<<5) << shift;
+			break;
+		  case dir1:
+			break;
+		}
+		break;
+  }
+}
+
+void delayMicro(long time){
+	TIM6->CNT = 0;
+	while(TIM6->CNT < time){}
+}
+
+unsigned long getMicro(){
+	return TIM6->CNT;
+}
+
+void resetTime(){
+	TIM6->CNT = 0;
+}
