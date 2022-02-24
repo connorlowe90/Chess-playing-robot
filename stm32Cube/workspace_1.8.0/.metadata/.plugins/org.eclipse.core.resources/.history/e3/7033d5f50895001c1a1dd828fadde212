@@ -191,7 +191,6 @@ int main(void)
 //    	delayMicro(pow(2,15));
 //    }
     setMagnet(0);
-    moveAxisRelative(Z,-80,40,300);
     moveAxisRelative(Z,80,40,300);
 	moveXYAbsolute(78,180,80,300);
 	moveAxisRelative(Z,-80,40,300);
@@ -204,7 +203,6 @@ int main(void)
 	moveXYAbsolute(400,500,80,300);
 
 	moveXYAbsolute(0,0,80,300);
-
 
 	}
   /* USER CODE END 3 */

@@ -168,7 +168,7 @@ int main(void)
 //	BoardCal();
 //	HAL_UART_Receive_DMA(&huart3, (uint8_t*) messageBuffer, 7);
 
-
+	setMagnet(0);
 //	moveAxisRelative(Z,80,40,300);
   /* USER CODE END 2 */
 
@@ -190,22 +190,14 @@ int main(void)
 //    	moveAxisRelative(Z,80,50,300);
 //    	delayMicro(pow(2,15));
 //    }
-    setMagnet(0);
+
     moveAxisRelative(Z,-80,40,300);
     moveAxisRelative(Z,80,40,300);
+
 	moveXYAbsolute(78,180,80,300);
-	moveAxisRelative(Z,-80,40,300);
-	setMagnet(1);
-
-	moveAxisRelative(Z,80,40,300);
-
 	moveXYAbsolute(361,179,80,300);
 	moveXYAbsolute(77,466,80,300);
 	moveXYAbsolute(400,500,80,300);
-
-	moveXYAbsolute(0,0,80,300);
-
-
 	}
   /* USER CODE END 3 */
 }

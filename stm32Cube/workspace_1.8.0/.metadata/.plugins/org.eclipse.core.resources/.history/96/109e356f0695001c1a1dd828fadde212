@@ -71,7 +71,7 @@ int checkEndstop(){
 
 void setMagnet(int state){
 	int shift = state * 16;
-	GPIOE->BSRR |= (1<<9) << shift;
+	GPIOC->BSRR |= (1<<5) << shift;
 }
 
 void delayMicro(long time){

@@ -1,6 +1,7 @@
 board.c:18:6:initPins	4	static
 board.c:24:6:pinWrite	24	static
 board.c:68:5:checkEndstop	4	static
-board.c:72:6:delayMicro	16	static
-board.c:77:15:getMicro	4	static
-board.c:81:6:resetTime	4	static
+board.c:72:6:setMagnet	24	static
+board.c:77:6:delayMicro	16	static
+board.c:82:15:getMicro	4	static
+board.c:86:6:resetTime	4	static

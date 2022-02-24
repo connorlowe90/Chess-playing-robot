@@ -69,11 +69,6 @@ int checkEndstop(){
 	return GPIOC->IDR & (1 << 8);
 }
 
-void setMagnet(int state){
-	int shift = state * 16;
-	GPIOE->BSRR |= (1<<9) << shift;
-}
-
 void delayMicro(long time){
 	TIM6->CNT = 0;
 	while(TIM6->CNT < time){}

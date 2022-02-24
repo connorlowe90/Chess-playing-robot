@@ -190,8 +190,8 @@ int main(void)
 //    	moveAxisRelative(Z,80,50,300);
 //    	delayMicro(pow(2,15));
 //    }
-    setMagnet(0);
     moveAxisRelative(Z,-80,40,300);
+    setMagnet(0);
     moveAxisRelative(Z,80,40,300);
 	moveXYAbsolute(78,180,80,300);
 	moveAxisRelative(Z,-80,40,300);
