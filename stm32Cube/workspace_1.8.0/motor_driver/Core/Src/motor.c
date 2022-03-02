@@ -2,21 +2,21 @@
 //#include <Arduino.h>    // Only for serial debug messages
 
 // Current position of the toolhead
-float currentX = 0.0;
-float currentY = 0.0;
-float currentZ = 0.0;
+float currentX = STANDBY_X;
+float currentY = STANDBY_Y;
+float currentZ = TRAVEL_Z;
 
 // Moves the X and Y axes in sync so the toolhead moves in a straight line. Moves relative to current position
 void moveXYRelative(float x, float y, float speed, float acceleration){
 	float XYmicrostepsPerMM = XY_STEPS_PER_MM * MICROSTEP_FACTOR;
 
 	setDirection(x,y);
-	float distanceX = fabs(x);
-	float distanceY = fabs(y);
+	double distanceX = fabs(x);
+	double distanceY = fabs(y);
 
-	float angle;
+	double angle;
 
-	if(x == 0){
+	if(distanceX == 0){
 		angle = PI/2;
 	} else {
 		angle = atan(distanceY/distanceX);
@@ -24,48 +24,48 @@ void moveXYRelative(float x, float y, float speed, float acceleration){
 
 
 	// X vars
-	float speedX = cos(angle) * speed;
-	float accelTimeX = speedX/acceleration;
-	float accelDistanceX = calcDistance(accelTimeX, 0, acceleration);
-	float coastDistanceX = distanceX - (2*accelDistanceX);
-	float coastTimeX = coastDistanceX/speedX;
+	double speedX = cos(angle) * speed;
+	double accelTimeX = speedX/acceleration;
+	double accelDistanceX = calcDistance(accelTimeX, 0, acceleration);
+	double coastDistanceX = distanceX - (accelDistanceX);
+	double coastTimeX = coastDistanceX/speedX;
 
 	if(coastTimeX < 0){
-		speedX = sqrt(distanceX/acceleration);
-		accelTimeX = speedX/acceleration;
+		accelTimeX = sqrt(distanceX/acceleration);
+		speedX = accelTimeX * acceleration;
 		accelDistanceX = calcDistance(accelTimeX, 0, acceleration);
 		coastTimeX = 0;
 		coastDistanceX = 0;
 	}
 
-	unsigned long accelTime_usX = accelTimeX * 1000000;
-	unsigned long coastTime_usX = coastTimeX * 1000000;
+	unsigned long accelTime_usX = accelTimeX * 1000000.0;
+	unsigned long coastTime_usX = coastTimeX * 1000000.0;
 
 	unsigned long stepsX = XYmicrostepsPerMM * distanceX;
-	float currentSpeedX = 5;
-	unsigned long pulseLengthX = 1000000/(currentSpeedX * XYmicrostepsPerMM);
+	double currentSpeedX = 5;
+	unsigned long pulseLengthX = 1000000.0/(currentSpeedX * XYmicrostepsPerMM);
 
 	// Y vars
-	float speedY = sin(angle) * speed;
-	float accelTimeY = speedY/acceleration;
-	float accelDistanceY = calcDistance(accelTimeY, 0, acceleration);
-	float coastDistanceY = distanceY - (2*accelDistanceY);
-	float coastTimeY = coastDistanceY/speedY;
+	double speedY = sin(angle) * speed;
+	double accelTimeY = speedY/acceleration;
+	double accelDistanceY = calcDistance(accelTimeY, 0, acceleration);
+	double coastDistanceY = distanceY - (accelDistanceY);
+	double coastTimeY = coastDistanceY/speedY;
 
 	if(coastTimeY < 0){
-		speedY = sqrt(distanceY/acceleration);
-		accelTimeY = speedY/acceleration;
+		accelTimeY = sqrt(distanceY/acceleration);
+		speedX = accelTimeY * acceleration;
 		accelDistanceY = calcDistance(accelTimeY, 0, acceleration);
 		coastTimeY = 0;
 		coastDistanceY = 0;
 	}
 
-	unsigned long accelTime_usY = accelTimeY * 1000000;
-	unsigned long coastTime_usY = coastTimeY * 1000000;
+	unsigned long accelTime_usY = accelTimeY * 1000000.0;
+	unsigned long coastTime_usY = coastTimeY * 1000000.0;
 
 	unsigned long stepsY = XYmicrostepsPerMM * distanceY;
-	float currentSpeedY = 5;
-	unsigned long pulseLengthY = 1000000/(currentSpeedY * XYmicrostepsPerMM);
+	double currentSpeedY = 5;
+	unsigned long pulseLengthY = 1000000.0/(currentSpeedY * XYmicrostepsPerMM);
 
 	// Time
 	unsigned long time = 0;
@@ -83,11 +83,11 @@ void moveXYRelative(float x, float y, float speed, float acceleration){
 		if(stepsX > 0 && pulseTimerX >= pulseLengthX){
 			pulseTimerX = 0;
 			if(time <= accelTime_usX){
-				currentSpeedX = (acceleration * time)/1000000;
+				currentSpeedX = acceleration * (time/1000000.0);
 			} else if(time > accelTime_usX && time <= (accelTime_usX + coastTime_usX)){
 				currentSpeedX = speedX;
 			} else {
-				currentSpeedX = speedX - (acceleration * (time-(accelTime_usX + coastTime_usX)))/1000000;
+				currentSpeedX = max((speedX - (acceleration * (time-(accelTime_usX + coastTime_usX))/1000000.0)),speedX);
 			}
 			pulseLengthX = 1000000/(currentSpeedX * XYmicrostepsPerMM);
 			pinWrite(X, step,1);
@@ -103,13 +103,13 @@ void moveXYRelative(float x, float y, float speed, float acceleration){
 		if(stepsY > 0 && pulseTimerY >= pulseLengthY){
 			pulseTimerY = 0;
 			if(time <= accelTime_usY){
-				currentSpeedY = (acceleration * time)/1000000;
+				currentSpeedY = acceleration * (time/1000000.0);
 			} else if(time > accelTime_usY && time <= (accelTime_usY + coastTime_usY)){
 				currentSpeedY = speedY;
 			} else {
-				currentSpeedY = speedY - (acceleration * (time-(accelTime_usY + coastTime_usY)))/1000000;
+				currentSpeedY = max((speedY - (acceleration * (time-(accelTime_usY + coastTime_usY))/1000000.0)),speedY);
 			}
-			pulseLengthY = 1000000/(currentSpeedY * XYmicrostepsPerMM);
+			pulseLengthY = 1000000.0/(currentSpeedY * XYmicrostepsPerMM);
 			pinWrite(Y, step,1);
 			delayMicro(10);
 			pinWrite(Y, step,0);
@@ -125,17 +125,21 @@ void moveXYRelative(float x, float y, float speed, float acceleration){
 
 // Set the directions of the XY motors
 void setDirection(float x, float y){
-  bool directionX = x >= 0;
-  bool directionY = y >= 0;
+  int directionX = x >= 0;
+  int directionY = y >= 0;
   pinWrite(X, dir0, directionX);
   pinWrite(X, dir1, !directionX);
   pinWrite(Y, dir0, directionY);
   pinWrite(Y, dir1, !directionY);
 }
 
-void setHome(){
+void setHomeXY(){
   currentX = 0.0;
   currentY = 0.0;
+}
+
+void setHomeZ(){
+	currentZ = 0.0;
 }
 
 void moveXYAbsolute(float x, float y, float speed, float accel){
@@ -145,31 +149,32 @@ void moveXYAbsolute(float x, float y, float speed, float accel){
 }
 
 void moveAxisRelative(axis moveAxis, float distance, float speed, float acceleration){
-	float ZmicrostepsPerMM = Z_STEPS_PER_MM * MICROSTEP_FACTOR;
+	float ZmicrostepsPerMM = Z_STEPS_PER_MM * MICROSTEP_FACTOR_Z;
 
 	pinWrite(moveAxis,dir0, distance < 0);
 
 	float travelDistance = fabs(distance);
+	float maxSpeed = speed;
 
-	float accelTime = speed/acceleration;
+	float accelTime = maxSpeed/acceleration;
 	float accelDistance = calcDistance(accelTime, 0, acceleration);
 	float coastDistance = travelDistance - (2*accelDistance);
 	float coastTime = coastDistance/speed;
 
 	if(coastTime < 0){
-		speed = sqrt(travelDistance/acceleration);
-		accelTime = speed/acceleration;
+		accelTime = sqrt(distance/acceleration);
+		maxSpeed = accelTime * acceleration;
 		accelDistance = calcDistance(accelTime, 0, acceleration);
 		coastTime = 0;
 		coastDistance = 0;
 	}
 
-	unsigned long accelTime_us = accelTime * 1000000;
-	unsigned long coastTime_us = coastTime * 1000000;
+	unsigned long accelTime_us = accelTime * 1000000.0;
+	unsigned long coastTime_us = coastTime * 1000000.0;
 
 	unsigned long steps = ZmicrostepsPerMM * travelDistance;
 	float currentSpeed = 5;
-	unsigned long pulseLength = 1000000/(currentSpeed * ZmicrostepsPerMM);
+	unsigned long pulseLength = 1000000.0/(currentSpeed * ZmicrostepsPerMM);
 
 	// Time
 	unsigned long time = 0;
@@ -186,9 +191,9 @@ void moveAxisRelative(axis moveAxis, float distance, float speed, float accelera
 			if(time <= accelTime_us){
 				currentSpeed = (acceleration * time)/1000000;
 			} else if(time > accelTime_us && time <= (accelTime_us + coastTime_us)){
-				currentSpeed = speed;
+				currentSpeed = maxSpeed;
 			} else {
-				currentSpeed = speed - (acceleration * (time-(accelTime_us + coastTime_us)))/1000000;
+				currentSpeed = maxSpeed - (acceleration * (time-(accelTime_us + coastTime_us))/1000000.0);
 			}
 			pulseLength = 1000000/(currentSpeed * ZmicrostepsPerMM);
 			pinWrite(moveAxis, step,1);
@@ -201,8 +206,24 @@ void moveAxisRelative(axis moveAxis, float distance, float speed, float accelera
 	}
 }
 
+void moveZRelative(float z, float speed) {
+	float ZmicrostepsPerMM = Z_STEPS_PER_MM * MICROSTEP_FACTOR_Z;
+
+	pinWrite(Z,dir0, z < 0);
+	unsigned long delay = 1000000/(speed * ZmicrostepsPerMM);
+
+	float travelDistance = fabs(z);
+	unsigned long steps = ZmicrostepsPerMM * travelDistance;
+	for(; steps > 0; steps --){
+		pinWrite(Z, step,1);
+		delayMicro(10);
+		pinWrite(Z, step,0);
+		delayMicro(delay);
+	}
+}
+
 void moveZAbsolute(float z, float speed, float acceleration){
-	moveAxisRelative(Z, z-currentZ, speed, acceleration);
+	moveZRelative(z-currentZ, speed);
 	currentZ = z;
 }
 
@@ -210,60 +231,29 @@ float calcDistance(float time, float speed, float acceleration){
 	return (0.5 * acceleration * pow(time,2)) + (speed * time);
 }
 
-unsigned long gcd_recurse(unsigned long a, unsigned long b) {
-  if (b == 0) return a;
-  if (a == 0) return b;
-  if (b > a) {
-    return gcd_recurse(a, b % a);
-  }
 
-  return gcd_recurse(b, a % b);
-}
+sizeOfPiece arr[8] = {{'p',43.15}, {'n',52.44}, {'r',43.09}, {'b',61.69}, {'q',73.11}, {'k',88.34}};
 
-typedef struct point {
-    unsigned int x;
-    unsigned int y;
-} point;
-
-typedef struct sizeOfPiece {
-    char key;
-    double value;
-} sizeOfPiece;
-
-sizeOfPiece arr[8] = {{'p',44.7}, {'k',54.2}, {'r',42.1}, {'b',61.7}, {'q',73.2}, {'k',88.2}};
-
-                    // bottom right                                                       // bottom left
-point board[64] = {{78,180}, {78,221}, {78,262}, {78,303}, {78,349}, {77,385}, {77,426}, {77,466},
-                   {119,181},{119,222},{118,262},{118,303},{118,345},{117,385},{116,426},{116,426},
-                   {160,181},{159,221},{159,262},{158,304},{158,345},{157,385},{157,426},{157,426},
-                   {199,181},{199,222},{199,222},{198,304},{198,344},{197,385},{196,426},{196,465},
-                   {241,180},{241,220},{241,220},{239,303},{239,384},{239,384},{238,425},{238,465},
-                   {281,180},{281,220},{281,220},{280,303},{279,383},{279,383},{278,424},{278,464},
-                   {321,179},{321,220},{321,220},{320,302},{319,383},{319,383},{319,424},{318,465},
-                   {361,179},{361,220},{361,220},{360,302},{360,383},{360,383},{359,424},{359,465}};
+point board[64] = {{60.000, 169.000}, {59.571, 209.857}, {59.143, 250.714}, {58.714, 291.571}, {58.286, 332.429}, {57.857, 373.286}, {57.429, 414.143}, {57.000, 455.000},
+                   {100.714, 168.571}, {100.265, 209.449}, {99.816, 250.327}, {99.367, 291.204}, {98.918, 332.082}, {98.469, 372.959}, {98.020, 413.837}, {97.571, 454.714},
+                   {141.429, 168.143}, {140.959, 209.041}, {140.490, 249.939}, {140.020, 290.837}, {139.551, 331.735}, {139.082, 372.633}, {138.612, 413.531}, {138.143, 454.429},
+                   {182.143, 167.714}, {181.653, 208.633}, {181.163, 249.551}, {180.673, 290.469}, {180.184, 331.388}, {179.694, 372.306}, {179.204, 413.224}, {178.714, 454.143},
+                   {222.857, 167.286}, {222.347, 208.224}, {221.837, 249.163}, {221.327, 290.102}, {220.816, 331.041}, {220.306, 371.980}, {219.796, 412.918}, {219.286, 453.857},
+                   {263.571, 166.857}, {263.041, 207.816}, {262.510, 248.776}, {261.980, 289.735}, {261.449, 330.694}, {260.918, 371.653}, {260.388, 412.612}, {259.857, 453.571},
+                   {304.286, 166.429}, {303.735, 207.408}, {303.184, 248.388}, {302.633, 289.367}, {302.082, 330.347}, {301.531, 371.327}, {300.980, 412.306}, {300.429, 453.286},
+                   {345.000, 166.000}, {344.429, 207.000}, {343.857, 248.000}, {343.286, 289.000}, {342.714, 330.000}, {342.143, 371.000}, {341.571, 412.000}, {341.000, 453.000}};
                    // top right                                                         // top left
 
-point blackCaptured[17] = {{378,566},
-                           {338,586}, {338,547},
-                           {298,586}, {298,547},
-                           {258,586}, {258,547},
-                           {218,586}, {218,547},
-                           {178,586}, {178,547},
-                           {138,586}, {138,547},
-                           {98,586},  {98,547},
-                           {58,586},  {58,547}};
 
-
-point whiteCaptured[17] = {{382,77},
-                           {343,97}, {343,57},
-                           {302,97}, {302,57},
-                           {262,97}, {262,57},
-                           {222,97}, {222,57},
-                           {182,97}, {182,57},
-                           {142,97}, {142,57},
-                           {102,97}, {102,57},
-                           {62,97},  {62,57}};
-
+point whiteCaptured[17] = {{383.000,69.000},
+                           {343.000,89.000}, {343.000,49.000},
+                           {302.143,89.286}, {302.429,49.143},
+                           {261.286,89.571}, {261.857,49.286},
+                           {220.429,89.857}, {221.286,49.429},
+                           {179.571,90.143}, {180.714,49.571},
+                           {138.714,90.429}, {140.143,49.714},
+                           {97.857,90.714}, {99.571,49.857},
+                           {57.000,91.000},  {59.000,59.000}};
 
 
 
@@ -274,10 +264,68 @@ void BoardCal(){
     }
     for(int i = 0; i < 17; i++){
         //  Send this to STM / Aurdino
-    	moveXYAbsolute(blackCaptured[i].x,blackCaptured[i].y,80,300);
-    }
-    for(int i = 0; i < 17; i++){
-        //  Send this to STM / Aurdino
     	moveXYAbsolute(whiteCaptured[i].x,whiteCaptured[i].y,80,300);
     }
+}
+
+void movePiece(float startX, float startY, float endX, float endY, float pieceZ){
+	float XYSpeed = 700;
+	float ZSpeed = 45;
+	float XYAccel = 50000;
+
+	// Move to the travel height, if not there already
+	moveZAbsolute(TRAVEL_Z,ZSpeed,300);
+
+	// Move the the starting square
+	moveXYAbsolute(startX,startY,XYSpeed,XYAccel);
+
+	// Turn on the magnet
+	setMagnet(0);
+
+	// Move down to grab the piece
+	moveZAbsolute(pieceZ,ZSpeed,300);
+
+	delayMicro(1000);
+
+	// Piece is now grabbed
+
+	// Move up to be above the other pieces
+	moveZAbsolute(TRAVEL_Z,ZSpeed,300);
+
+	// Move to target square
+	moveXYAbsolute(endX,endY,XYSpeed,XYAccel);
+
+	// Move down to board
+	moveZAbsolute(pieceZ,ZSpeed,300);
+
+	// Release the piece
+	setMagnet(1);
+	delayMicro(1000);
+
+	// Move back up to travel height
+	moveZAbsolute(TRAVEL_Z,ZSpeed,300);
+}
+
+void moveToStandbyPosition(){
+	// Move to the travel height, if not there already
+	moveZAbsolute(TRAVEL_Z,60,300);
+
+	// Move to target square
+	moveXYAbsolute(STANDBY_X,STANDBY_Y,700,50000);
+}
+
+void movePieceByIndex(int startIndex, int endIndex, int pieceIndex){
+	point startPoint = getCoordsFromIndex(startIndex);
+	point endPoint = getCoordsFromIndex(endIndex);
+	float pieceHeight = arr[pieceIndex].value - 44.7;
+	movePiece(startPoint.x, startPoint.y, endPoint.x, endPoint.y, pieceHeight);
+
+}
+
+point getCoordsFromIndex(int index){
+	if(index > 63){
+		return whiteCaptured[index-63];
+	} else {
+		return board[index];
+	}
 }

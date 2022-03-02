@@ -16,17 +16,30 @@
      _a < _b ? _a : _b; })
 
 // Size of the printer chassis, tool cannot move past these limits
-#define MACHINE_BOUND_X 457.2
-#define MACHINE_BOUND_Y 584.2
-#define MACHINE_BOUND_Z 254.0
+#define MACHINE_BOUND_X 456
+#define MACHINE_BOUND_Y 583
+#define MACHINE_BOUND_Z 252
+
+#define TRAVEL_Z 150
 
 #define MICROSTEP_FACTOR 8
+#define MICROSTEP_FACTOR_Z 1
 #define XY_STEPS_PER_MM 6.25
 #define Z_STEPS_PER_MM 93.75
 
-typedef int bool;
-#define true 1
-#define false 0
+#define STANDBY_X MACHINE_BOUND_X
+#define STANDBY_Y MACHINE_BOUND_Y
+#define STANDBY_Z TRAVEL_Z
+
+typedef struct point {
+    float x;
+    float y;
+} point;
+
+typedef struct sizeOfPiece {
+    char key;
+    double value;
+} sizeOfPiece;
 
 // Moves the X and Y axes in sync so the toolhead moves in a straight line. Moves relative to current position
 void moveXYRelative(float x, float y, float speed, float acceleration);
@@ -35,7 +48,9 @@ void moveXYRelative(float x, float y, float speed, float acceleration);
 void setDirection(float x, float y);
 
 // Sets the current position as (0,0) in the coordinate system
-void setHome();
+void setHomeXY();
+
+void setHomeZ();
 
 // Moves the X and Y axes in sync so the toolhead moves in a straight line. Moves to absolute position offset from the home point
 void moveXYAbsolute(float x, float y, float speed, float accel);
@@ -46,8 +61,14 @@ void moveAxisRelative(axis moveAxis, float distance, float speed, float accelera
 
 float calcDistance(float time, float speed, float acceleration);
 
-unsigned long gcd_recurse(unsigned long a, unsigned long b);
-
 void BoardCal();
+
+void movePiece(float startX, float startY, float endX, float endY, float pieceZ);
+
+void movePieceByIndex(int startIndex, int endIndex, int pieceIndex);
+
+point getCoordsFromIndex(int index);
+
+void moveToStandbyPosition();
 
 #endif

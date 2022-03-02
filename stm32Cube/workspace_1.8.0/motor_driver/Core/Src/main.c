@@ -26,6 +26,7 @@
 #include "board.h"
 #include <string.h>
 #include <math.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -92,26 +93,74 @@ void printMessage(char* buffer){
 
 }
 
-//void parse(char *buffer){
-//  if(buffer[0] == 's'){
-//    char *s = strtok(buffer, "=");
-//    s = strtok(NULL, "=");
-//    speed = atof(s);
-//    printMessage("Speed is set to ");
-//    printMessage(speed);
-//    printMessage("\r\n");
-//  } else if(buffer[0] == 'h'){
-//    setHome();
-//    printMessage("Home set\r\n");
-//  } else {
-//    char *s = strtok(buffer, ",");
-//    float x = atof(s);
-//    s = strtok(NULL, ",");
-//    float y = atof(s);
-//    moveXYAbsolute(x,y,speed);
-//    printMessage("Move Complete\r\n");
-//  }
-//}
+float acceleration = 800;
+float speed = 120;
+void parse(char *buffer){
+	char message[50];
+	char* s;
+	switch(buffer[0]){
+		case 's':
+			s = strtok(buffer, "=");
+			s = strtok(NULL, "=");
+			speed = atof(s);
+
+			sprintf(message, "Speed is set to %s \r\n", s);
+			printMessage(message);
+			break;
+		case 'a':
+			s = strtok(buffer, "=");
+			s = strtok(NULL, "=");
+			acceleration = atof(s);
+
+			sprintf(message, "Acceleration is set to %s \r\n", s);
+			printMessage(message);
+			break;
+		case 'h':
+			setHomeZ();
+			sprintf(message, "Home set\r\n");
+			printMessage(message);
+			break;
+		case 'z':
+			s = strtok(buffer, "=");
+			s = strtok(NULL, "=");
+			float z = atof(s);
+			moveZAbsolute(z,45,300);
+
+			sprintf(message, "Z is set to %s \r\n", s);
+			printMessage(message);
+			break;
+		case 'm':
+			sprintf(message, "Starting Move\r\n");
+			printMessage(message);
+
+			s = strtok(buffer, " ");
+			s = strtok(NULL, ",");
+			float x = atof(s);
+			s = strtok(NULL, ",");
+			float y = atof(s);
+			moveXYAbsolute(x,y,speed,acceleration);
+
+			sprintf(message, "Move Complete\r\n");
+			printMessage(message);
+			break;
+		default:
+			s = strtok(buffer,",/");
+			while(s[0] != '$'){
+				int pieceIndex = atoi(s);
+				s = strtok(NULL, ",/");
+				int startIndex = atoi(s);
+				s = strtok(NULL, ",/");
+				int endIndex = atoi(s);
+				movePieceByIndex(startIndex, endIndex, pieceIndex);
+				s = strtok(NULL,",/");
+			}
+			moveToStandbyPosition();
+
+
+			sprintf(message, "Move Complete\r\n");
+			printMessage(message);
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -149,6 +198,7 @@ int main(void)
   MX_USART3_UART_Init();
   /* USER CODE BEGIN 2 */
 	initPins();
+	moveZAbsolute(TRAVEL_Z,50,300);
 
 //	char data[] = "HELLO WORLD \r\n";
 //	printMessage(data);
@@ -180,7 +230,8 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-//    getMessage(messageBuffer);
+    getMessage(messageBuffer);
+    parse(messageBuffer);
 //	printMessage(messageBuffer);
 
 
@@ -190,21 +241,6 @@ int main(void)
 //    	moveAxisRelative(Z,80,50,300);
 //    	delayMicro(pow(2,15));
 //    }
-    setMagnet(0);
-    moveAxisRelative(Z,-80,40,300);
-    moveAxisRelative(Z,80,40,300);
-	moveXYAbsolute(78,180,80,300);
-	moveAxisRelative(Z,-80,40,300);
-	setMagnet(1);
-
-	moveAxisRelative(Z,80,40,300);
-
-	moveXYAbsolute(361,179,80,300);
-	moveXYAbsolute(77,466,80,300);
-	moveXYAbsolute(400,500,80,300);
-
-	moveXYAbsolute(0,0,80,300);
-
 
 	}
   /* USER CODE END 3 */
@@ -246,8 +282,8 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV16;
-  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
   {
