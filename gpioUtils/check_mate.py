@@ -2,6 +2,7 @@ from RPLCD.i2c import CharLCD
 from Light_Outputs import *
 import time
 import os
+from soundFiles.playSound import *
 
 # Chess game/engine
 import chess
@@ -19,51 +20,52 @@ lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
 # players are in check, checkmate, stalemate, or draw
 def check_game_state(board):
     if(board.is_stalemate()):
-        os.system("espeak -s60 \"Stalemate\"") 
+        playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/stalemate.wav') 
         stalemate_state()
         return "Stalemate"
     elif(board.can_claim_draw() or board.is_insufficient_material()):
-        os.system("espeak -s60 \"Draw\"") 
+        playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/draw.wav') 
         draw_state()
         return "Draw"
     elif(board.turn == chess.WHITE):
-        if(board.is_check()):
-            os.system("espeak -s60 \"Check\"") 
-            in_check()
-            return "Running"
-        elif(board.is_checkmate()):
-            os.system("espeak -s60 \"Checkmate\"") 
+        if(board.is_checkmate()):
+            playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/checkmate.wav') 
             check_mate()
             return "Checkmate"
-    elif(board.turn == chess.BLACK):
-        if(board.is_check()):
-            os.system("espeak -s60 \"Check\"") 
-            in_check_comp()
+        elif(board.is_check()):
+            playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/check.wav') 
+            in_check()
             return "Running"
-        elif(board.is_checkmate()):
-            os.system("espeak -s60 \"Check\"") 
+    elif(board.turn == chess.BLACK):
+        if(board.is_checkmate()):
+            playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/checkmate.wav') 
             check_mate_comp()
             return "Checkmate"
+        elif(board.is_check()):
+            playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/check.wav') 
+            in_check_comp()
+            return "Running"
     return "Running"
             
 def check_game_state_s(board, promotion):
     if(board.is_stalemate()):
         light_pink_LED()
-        os.system("espeak -s60 \"Stalemate\"") 
+        playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/stalemate.wav') 
         return stalemate_s()
     elif(board.can_claim_draw() or board.is_insufficient_material()):
         cyan_LED()
-        os.system("espeak -s60 \"Draw\"") 
+        playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/draw.wav') 
         return draw_state_s()
-    elif(board.is_check()):
-        purple_LED()
-        os.system("espeak -s60 \"Check\"") 
-        return in_check_s()
     elif(board.is_checkmate()):
         green_LED()
-        os.system("espeak -s60 \"Checkmate\"") 
+        playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/checkmate.wav') 
         return check_mate_s()
+    elif(board.is_check()):
+        purple_LED()
+        playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/check.wav') 
+        return in_check_s()
     elif(promotion):
+        playSound('/home/pi/Embedded-Capstone/gpioUtils/soundFiles/promote.wav') 
         return "Promote to Queen"
     
         

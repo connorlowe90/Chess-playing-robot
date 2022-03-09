@@ -1,6 +1,6 @@
 import chess
 import sys
-sys.path.insert(1, '//home/pi/ee475')
+sys.path.insert(1, '//home/pi/Embedded-Capstone')
 from gpioUtils.Light_Outputs import *
 from gpioUtils.check_mate import *
 from gpioUtils.difficultyWaitForPress import *

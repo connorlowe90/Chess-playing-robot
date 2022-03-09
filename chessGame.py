@@ -14,7 +14,7 @@ from chess import *
 from stockfish import Stockfish
 
 # engine using stockfish package
-stockfish = Stockfish('/home/pi/ee475/Chess-Engines-for-Raspberry-Pi-by-Al-master/arm7l/stockfish231')
+stockfish = Stockfish('/home/pi/Embedded-Capstone/Chess-Engines-for-Raspberry-Pi-by-Al-master/arm7l/stockfish231')
 print(stockfish.get_best_move())
 
 # Chessboard detection functions
@@ -38,11 +38,13 @@ from gpioUtils.check_mate import *
 from gpioUtils.difficultyWaitForPress import *
 import RPi.GPIO as GPIO
 import time
+from soundFiles.playSound import *
+
 
 # Image path
-image_pathStart = r'/home/pi/ee475/calibration/test1.bmp'
-image_pathStart2 = r'/home/pi/ee475/calibration/test2.bmp'
-image_pathBlank = r'/home/pi/ee475/calibration/blank1.bmp'
+image_pathStart = r'/home/pi/Embedded-Capstone/calibration/test1.bmp'
+image_pathStart2 = r'/home/pi/Embedded-Capstone/calibration/test2.bmp'
+image_pathBlank = r'/home/pi/Embedded-Capstone/calibration/blank1.bmp'
 
 ###########################
 # chess game
@@ -96,12 +98,12 @@ def playChess():
 						  bouncetime=7000)   
 						  
 	# initilize board
-	#setup_LEDs()  # Setup the led pins and pot for it
-	board = chess.Board()
-	board.set_fen("r3kb1r/pppqpppp/3p1nb1/3P4/2n1PP2/2N2BP1/PPP4P/R1BQK1NR w KQkq - 3 9")
+	board = chess.Board('r2qkb1r/pppbpppp/2n2n2/3p4/1QP5/3P4/PP2PPPP/RNB1KBNR w KQkq - 5 5')
+	
+	######################################################
+	# Starting Fen for demonstration
+	#######################################################
 	print(board)
-	legal_moves = list(board.legal_moves)
-	print(legal_moves)
 
 	# get initial pictures
 	imgBlank, corners = detectRectP(image_pathBlank)
@@ -119,7 +121,7 @@ def playChess():
 	# run game
 	###########################
 	while (currentGameState == "Running"):
-		os.system("espeak -s60 \"Ready\"") 
+		playSound('/home/pi/Embedded-Capstone/soundFiles/ready.wav')
 		print(board.fen())
 		  
 		# wait for user to accept move
@@ -137,7 +139,9 @@ def playChess():
 			
 		# Check castling 		
 		move = checkCastlingMove(board, A, castling, imgA, imgB, imgBlank)
-
+		
+		print(move)
+		
 		# format move for sending to stm takes into acount invalid moves.
 		toSTM, newMove = formatMove(board, stockfish, move, diff)
 		if (newMove != 1):

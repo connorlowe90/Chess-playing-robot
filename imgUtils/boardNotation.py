@@ -1,6 +1,6 @@
 import chess
 import sys
-sys.path.insert(1, '//home/pi/ee475')
+sys.path.insert(1, '//home/pi/Embedded-Capstone')
 from gpioUtils.Light_Outputs import *
 from gpioUtils.check_mate import *
 from gpioUtils.difficultyWaitForPress import *
@@ -183,7 +183,8 @@ def formatMove(board, stockfish, move, diff):
 		indexesOut = [newMove2[i:i+2] for i in range(0, len(newMove2), 2)]
 		piece2, move21, move22 = getMoveBlackIndices(board, indexesOut)
 		toSTM = str(toSTM) + str(piece2) + ',' + str(move21) + ',' + str(move22) + '/$'
-		
+		print("hello")
+		print(board.fen())
 		# printing to lcd
 		state = check_game_state_s(board, promotion)
 		

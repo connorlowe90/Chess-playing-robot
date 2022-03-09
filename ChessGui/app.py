@@ -13,7 +13,7 @@ import serial
 from gpioUtils.Light_Outputs import setup_LEDs 
 import time
 
-stockfish = Stockfish('/home/pi/ee475/Chess-Engines-for-Raspberry-Pi-by-Al-master/arm7l/stockfish231')
+stockfish = Stockfish('/home/pi/Embedded-Capstone/Chess-Engines-for-Raspberry-Pi-by-Al-master/arm7l/stockfish231')
 
 
 app = Flask(__name__, template_folder="templates")
