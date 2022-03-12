@@ -72,6 +72,7 @@ def getPieceIter(piece, array):
 			c = c + 1
 	return c
 
+# check_captured_move() is a function that
 # checks to see if a piece is captured 
 def check_captured_move(move, board):
     moveArray = []
