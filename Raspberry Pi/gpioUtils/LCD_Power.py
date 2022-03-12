@@ -1,7 +1,16 @@
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file is for powering on/off the LCD screen
+
 from RPLCD.i2c import CharLCD
 from Light_Outputs import no_LED
 import time
 
+# Setup LCD screen
 lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
               cols=16, rows=2, dotsize=8,
               charmap='A02',

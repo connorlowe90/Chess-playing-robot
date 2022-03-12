@@ -1,10 +1,17 @@
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This was the original test file for setting difficulty
+# prior to creating the generalized diff file.
+
 import RPi.GPIO as GPIO
 import smbus
 from RPLCD.i2c import CharLCD
 
-# Need to bring the LCD in for now.
-# Might be able to fix that by passing
-# a parameter or something
+# Setup LCD screen
 lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
               cols=16, rows=2, dotsize=8,
               charmap='A02',
@@ -16,7 +23,7 @@ lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
 GPIO.setwarnings(False)
 GPIO.setmode(GPIO.BOARD)
 
-# Setup for the LCD with I2C
+# Setup for the poteniometer
 addr = 0x48
 A0 = 0x40
 

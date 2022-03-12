@@ -1,8 +1,11 @@
-# time: wait time library
-# RPi.GPIO: GPIO stuff
-# smbus: Potentiometer
-# RPLCD.i2c: LCD stuff
-# interrupt_test: bring in the interrupt file
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file was a testing main for buttons, LED, LCD, and pot
+
 import time
 import RPi.GPIO as GPIO
 import smbus
@@ -18,6 +21,7 @@ from LCD_Power import *
 diff = 0
 delta = -1
 
+# Setup LCD screen
 lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
               cols=16, rows=2, dotsize=8,
               charmap='A02',

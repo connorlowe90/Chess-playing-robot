@@ -16,9 +16,7 @@ from soundFiles.playSound import *
 # Chess game/engine
 import chess
 
-# Need to bring the LCD in for now.
-# Might be able to fix that by passing
-# a parameter or something
+# Setup LCD screen
 lcd = CharLCD(i2c_expander='PCF8574', address=0x27, port=1,
               cols=16, rows=2, dotsize=8,
               charmap='A02',
@@ -55,7 +53,7 @@ def check_game_state(board):
             in_check_comp()
             return "Running"
     return "Running"
-            
+          
 def check_game_state_s(board, promotion):
     if(board.is_stalemate()):
         light_pink_LED()
