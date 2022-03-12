@@ -1,3 +1,11 @@
+#Kellen Hartnett
+#Adiran Lewis
+#Connor Lowe
+#Sahibjeet Singh
+#Garett Tashiro
+#EE475, Group 5 Capstone Project
+
+# Imports used for UI, and chess engine.
 #!/usr/bin/env python3
 from simplejson import JSONDecodeError
 from socket import socket
@@ -13,23 +21,25 @@ import serial
 from gpioUtils.Light_Outputs import setup_LEDs 
 import time
 
+# Definish chess engine
 stockfish = Stockfish('/home/pi/Embedded-Capstone/Chess-Engines-for-Raspberry-Pi-by-Al-master/arm7l/stockfish231')
 
-
+#instance of the GUI
 app = Flask(__name__, template_folder="templates")
 
+#getting html code to work on the raspberry py.
 HtmlFile = open('IntroMessage.html')
 source_code = HtmlFile.read() 
 board = chess.Board()
 stm = serial.Serial("/dev/rfcomm0", baudrate=9600, timeout=None)
 setup_LEDs()
 
-
+#defining local route to be Group5ChessRobot
 @app.route('/Group5ChessRobot')
 def route():
     return source_code
 
-
+#defining post request to make the computer move and send user move played
 @app.route('/make_move', methods=['POST'])
 def make_move():
     # User move
@@ -89,6 +99,6 @@ def make_move():
     return fen
 
 
-
+# Running app on ip 0.0.0.0 which connects to local server.
 if __name__ == '__main__':
     app.run(host='0.0.0.0')
