@@ -92,18 +92,18 @@ def check_captured_move(move, board):
     pieceCap = str(pieceCap).lower() 
 
     if (pieceCap != None):
-		# start position
-		startPosition = ''.join(moveArray2[2:4])
-		fromIndex = returnIndexSTM(returnIndexOf(startPosition, chessboard))
-
-		# ending position
-		capWhite.append(pieceCap)
-		count = getPieceIter(pieceCap, capWhite)
-		endPosition = str(pieceCap) + str(pieceCap) + str(count)
-
-		# changed non cap white to chessboard
-		toIndex = returnIndexOf(endPosition, chessboard)
-		return pieceCap, fromIndex, toIndex	
+        # start position
+        startPosition = ''.join(moveArray2[2:4])
+        fromIndex = returnIndexSTM(returnIndexOf(startPosition, chessboard))
+        
+        # ending position
+        capWhite.append(pieceCap)
+        count = getPieceIter(pieceCap, capWhite)
+        endPosition = str(pieceCap) + str(pieceCap) + str(count)
+        
+        # changed non cap white to chessboard
+        toIndex = returnIndexOf(endPosition, chessboard)
+        return pieceCap, fromIndex, toIndex	
     
     return None, None. None
 	
