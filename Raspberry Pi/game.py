@@ -1,5 +1,16 @@
 #!/usr/bin/env python
 
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file is the main file that will do setup for buttons,
+# interrupts, potentiometer, and run the  playChess() function 
+# that will play through the game of chess, and you can play 
+# multiple games through the main.
+
 ###########################
 # imports
 ###########################

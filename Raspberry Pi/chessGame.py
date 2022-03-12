@@ -1,3 +1,12 @@
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file has a game play function that runs 
+# the whole chess game.
+
 ###########################
 # imports
 ###########################
