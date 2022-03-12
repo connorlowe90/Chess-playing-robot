@@ -1,16 +1,18 @@
-# import sounddevice as sd
-# import soundfile as sf
-
-# filename = '/home/pi/Embedded-Capstone/soundFiles/ready.wav'
-# # Extract data and sampling rate from file
-# data, fs = sf.read(filename, dtype='float32')  
-# sd.play(data, fs)
-# status = sd.wait()
-
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file is for playing the wav files for audio 
+# feedback to the user.
 
 from pydub import AudioSegment
 from pydub.playback import play
 
+# playSound() is a function that will use
+# the parameter 'path' to play the correct
+# audio file for user feedback.
 def playSound(path) :
 	sound = AudioSegment.from_wav(path)
 	play(sound)
