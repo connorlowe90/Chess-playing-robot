@@ -105,7 +105,7 @@ def check_captured_move(move, board):
         toIndex = returnIndexOf(endPosition, chessboard)
         return pieceCap, fromIndex, toIndex	
     
-    return None, None. None
+    return None, None, None
 	
 # get formated indexes for sending to STM for black move	
 def getMoveBlackIndices(board, indexOut):
