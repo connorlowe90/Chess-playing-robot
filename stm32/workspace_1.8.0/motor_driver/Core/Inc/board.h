@@ -1,3 +1,10 @@
+// Kellen Hartnett
+// Adrian Lewis
+// Connor Lowe
+// Sahibjeet Singh
+// Garrett Tashiro
+// EE 475, Group 5 Capstone Project
+
 /*
  * board.h
  * Defines board-specific commands (delays and pins)

@@ -1,3 +1,10 @@
+// Kellen Hartnett
+// Adrian Lewis
+// Connor Lowe
+// Sahibjeet Singh
+// Garrett Tashiro
+// EE 475, Group 5 Capstone Project
+
 #include "motor.h"
 
 // Current position of the toolhead, assumes it is in standby position at power on
