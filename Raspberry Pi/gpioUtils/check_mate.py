@@ -1,8 +1,17 @@
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file checks game states of the board and 
+# updates the LCD and LED according to the game state 
+
 from RPLCD.i2c import CharLCD
 from Light_Outputs import *
 import time
 import os
-from soundFiles.playSound import *
+from soundFiles.playSound import * 
 
 # Chess game/engine
 import chess
@@ -159,7 +168,10 @@ def illegal_move():
     illegal_LED()
     #lcd.clear()
     
-    
+# comp_moving() function is called when the
+# computer is making a move. The LCD will clear,
+# a message will be displayed, and the LED will
+# be yellow in color for a warning.      
 def comp_moving():
     lcd.clear()
     lcd.write_string('I am moving\r\nPlease wait')
