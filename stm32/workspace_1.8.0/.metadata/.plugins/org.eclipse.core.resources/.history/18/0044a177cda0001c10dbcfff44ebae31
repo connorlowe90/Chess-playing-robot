@@ -1,0 +1,103 @@
+#ifndef Motor_h
+#define Motor_h
+
+#include "board.h"
+#include <stdlib.h>
+#include <math.h>
+
+#define PI 3.1415926535897932384626433832795
+#define max(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a > _b ? _a : _b; })
+#define min(a,b) \
+   ({ __typeof__ (a) _a = (a); \
+       __typeof__ (b) _b = (b); \
+     _a < _b ? _a : _b; })
+
+// Size of the printer chassis, tool cannot move past these limits
+#define MACHINE_BOUND_X 456
+#define MACHINE_BOUND_Y 583
+#define MACHINE_BOUND_Z 252
+
+#define TRAVEL_Z 100
+#define MOVE_Z 150
+
+#define MICROSTEP_FACTOR 8
+#define MICROSTEP_FACTOR_Z 1
+#define XY_STEPS_PER_MM 6.25
+#define Z_STEPS_PER_MM 93.75
+
+#define STANDBY_X MACHINE_BOUND_X
+#define STANDBY_Y MACHINE_BOUND_Y
+#define STANDBY_Z TRAVEL_Z
+
+#define XY_SPEED 900
+#define Z_SPEED 55
+#define XY_ACCELERATION 50000
+
+typedef struct point {
+    float x;
+    float y;
+} point;
+
+typedef struct sizeOfPiece {
+    char key;
+    double value;
+} sizeOfPiece;
+
+sizeOfPiece arr[8] = {{'p',43.15}, {'n',52.44}, {'r',43.09}, {'b',61.69}, {'q',73.11}, {'k',88.34}};
+
+point board[64] = {{60.000, 169.000}, {59.571, 209.857}, {59.143, 250.714}, {58.714, 291.571}, {58.286, 332.429}, {57.857, 373.286}, {57.429, 414.143}, {57.000, 455.000},
+                   {100.714, 168.571}, {100.265, 209.449}, {99.816, 250.327}, {99.367, 291.204}, {98.918, 332.082}, {98.469, 372.959}, {98.020, 413.837}, {97.571, 454.714},
+                   {141.429, 168.143}, {140.959, 209.041}, {140.490, 249.939}, {140.020, 290.837}, {139.551, 331.735}, {139.082, 372.633}, {138.612, 413.531}, {138.143, 454.429},
+                   {182.143, 167.714}, {181.653, 208.633}, {181.163, 249.551}, {180.673, 290.469}, {180.184, 331.388}, {179.694, 372.306}, {179.204, 413.224}, {178.714, 454.143},
+                   {222.857, 167.286}, {222.347, 208.224}, {221.837, 249.163}, {221.327, 290.102}, {220.816, 331.041}, {220.306, 371.980}, {219.796, 412.918}, {219.286, 453.857},
+                   {263.571, 166.857}, {263.041, 207.816}, {262.510, 248.776}, {261.980, 289.735}, {261.449, 330.694}, {260.918, 371.653}, {260.388, 412.612}, {259.857, 453.571},
+                   {304.286, 166.429}, {303.735, 207.408}, {303.184, 248.388}, {302.633, 289.367}, {302.082, 330.347}, {301.531, 371.327}, {300.980, 412.306}, {300.429, 453.286},
+                   {345.000, 166.000}, {344.429, 207.000}, {343.857, 248.000}, {343.286, 289.000}, {342.714, 330.000}, {342.143, 371.000}, {341.571, 412.000}, {341.000, 453.000}};
+                   // top right                                                         // top left
+
+
+// white capture pieces indices need to be 64-80
+point whiteCaptured[17] = {{39, 87}, {79.714, 86.857}, {120.429, 86.714}, {161.143, 85.571}, {201.857, 86.429},
+         {242.571, 86.143}, {283.286,86.143}, {324, 86}, {40, 46}, {80.714, 45.929}, {121.429, 45.857},
+         {162.143, 45.786}, {202.857, 45.714}, {243.571,45.643}, {284.286, 45.571}, {325, 45.5}, {365, 66}};
+
+// black captured pieces indices need to be 81-97
+point blackCaptured[17] = {{35, 534}, {75.429, 534.357}, {115.857, 534.214}, {156.286, 534.071}, {196.714, 533.929},
+         {237.143, 533.786}, {277.571, 533.643}, {318, 533.5}, {36, 575.5}, {76.357, 575.357},
+         {116.714, 575.214}, {157.071, 575.071}, {197.429, 574.929}, {237.786, 574.786},
+         {278.143, 574.643}, {318.5, 574.5}, {358.5, 554}};
+
+// Moves the X and Y axes in sync so the toolhead moves in a straight line. Moves relative to current position
+void moveXYRelative(float x, float y);
+
+// Set the directions of the XY motors
+void setDirection(float x, float y);
+
+// Sets the current position as (0,0) in the coordinate system
+void setHomeXY();
+
+void setHomeZ();
+
+// Moves the X and Y axes in sync so the toolhead moves in a straight line. Moves to absolute position offset from the home point
+void moveXYAbsolute(float x, float y);
+
+void moveZAbsolute(float z);
+
+void moveAxisRelative(axis moveAxis, float distance);
+
+float calcDistance(float time, float speed, float acceleration);
+
+void BoardCal();
+
+void movePiece(float startX, float startY, float endX, float endY, float pieceZ);
+
+void movePieceByIndex(int startIndex, int endIndex, int pieceIndex);
+
+point getCoordsFromIndex(int index);
+
+void moveToStandbyPosition();
+
+#endif

@@ -1,0 +1,269 @@
+#include "motor.h"
+//#include <Arduino.h>    // Only for serial debug messages
+
+// Current position of the toolhead, assumes it is in standby position at power on
+float currentX = STANDBY_X;
+float currentY = STANDBY_Y;
+float currentZ = TRAVEL_Z;
+
+// Moves the X and Y axes in sync so the toolhead moves in a straight line. Moves relative to current position
+void moveXYRelative(float x, float y){
+	float XYmicrostepsPerMM = XY_STEPS_PER_MM * MICROSTEP_FACTOR;
+
+	setDirection(x,y);
+	double distanceX = fabs(x);
+	double distanceY = fabs(y);
+
+	double angle;
+
+	if(distanceX == 0){
+		angle = PI/2;
+	} else {
+		angle = atan(distanceY/distanceX);
+	}
+
+
+	// X vars
+	double speedX = cos(angle) * speed;
+	double accelTimeX = speedX/acceleration;
+	double accelDistanceX = calcDistance(accelTimeX, 0, acceleration);
+	double coastDistanceX = distanceX - (accelDistanceX);
+	double coastTimeX = coastDistanceX/speedX;
+
+	if(coastTimeX < 0){
+		accelTimeX = sqrt(distanceX/acceleration);
+		speedX = accelTimeX * acceleration;
+		accelDistanceX = calcDistance(accelTimeX, 0, acceleration);
+		coastTimeX = 0;
+		coastDistanceX = 0;
+	}
+
+	unsigned long accelTime_usX = accelTimeX * 1000000.0;
+	unsigned long coastTime_usX = coastTimeX * 1000000.0;
+
+	unsigned long stepsX = XYmicrostepsPerMM * distanceX;
+	double currentSpeedX = 5;
+	unsigned long pulseLengthX = 1000000.0/(currentSpeedX * XYmicrostepsPerMM);
+
+	// Y vars
+	double speedY = sin(angle) * speed;
+	double accelTimeY = speedY/acceleration;
+	double accelDistanceY = calcDistance(accelTimeY, 0, acceleration);
+	double coastDistanceY = distanceY - (accelDistanceY);
+	double coastTimeY = coastDistanceY/speedY;
+
+	if(coastTimeY < 0){
+		accelTimeY = sqrt(distanceY/acceleration);
+		speedX = accelTimeY * acceleration;
+		accelDistanceY = calcDistance(accelTimeY, 0, acceleration);
+		coastTimeY = 0;
+		coastDistanceY = 0;
+	}
+
+	unsigned long accelTime_usY = accelTimeY * 1000000.0;
+	unsigned long coastTime_usY = coastTimeY * 1000000.0;
+
+	unsigned long stepsY = XYmicrostepsPerMM * distanceY;
+	double currentSpeedY = 5;
+	unsigned long pulseLengthY = 1000000.0/(currentSpeedY * XYmicrostepsPerMM);
+
+	// Time
+	unsigned long time = 0;
+	unsigned long pulseTimerX = 0;
+	unsigned long pulseTimerY = 0;
+	unsigned long timeStep = 10;
+
+	while(stepsX > 0 || stepsY > 0){
+		delayMicro(timeStep);
+		time += timeStep;
+		pulseTimerX += timeStep;
+		pulseTimerY += timeStep;
+
+		// Update X
+		if(stepsX > 0 && pulseTimerX >= pulseLengthX){
+			pulseTimerX = 0;
+			if(time <= accelTime_usX){
+				currentSpeedX = acceleration * (time/1000000.0);
+			} else if(time > accelTime_usX && time <= (accelTime_usX + coastTime_usX)){
+				currentSpeedX = speedX;
+			} else {
+				currentSpeedX = max((speedX - (acceleration * (time-(accelTime_usX + coastTime_usX))/1000000.0)),speedX);
+			}
+			pulseLengthX = 1000000/(currentSpeedX * XYmicrostepsPerMM);
+			pinWrite(X, step,1);
+			delayMicro(10);
+			pinWrite(X, step,0);
+			time += 10;
+			pulseTimerX += 10;
+			pulseTimerY += 10;
+			stepsX--;
+		}
+
+		// Update Y
+		if(stepsY > 0 && pulseTimerY >= pulseLengthY){
+			pulseTimerY = 0;
+			if(time <= accelTime_usY){
+				currentSpeedY = acceleration * (time/1000000.0);
+			} else if(time > accelTime_usY && time <= (accelTime_usY + coastTime_usY)){
+				currentSpeedY = speedY;
+			} else {
+				currentSpeedY = max((speedY - (acceleration * (time-(accelTime_usY + coastTime_usY))/1000000.0)),speedY);
+			}
+			pulseLengthY = 1000000.0/(currentSpeedY * XYmicrostepsPerMM);
+			pinWrite(Y, step,1);
+			delayMicro(10);
+			pinWrite(Y, step,0);
+			time += 10;
+			pulseTimerX += 10;
+			pulseTimerY += 10;
+			stepsY--;
+		}
+
+	}
+
+}
+
+// Set the directions of the XY motors
+void setDirection(float x, float y){
+  int directionX = x >= 0;
+  int directionY = y >= 0;
+  pinWrite(X, dir0, directionX);
+  pinWrite(X, dir1, !directionX);
+  pinWrite(Y, dir0, directionY);
+  pinWrite(Y, dir1, !directionY);
+}
+
+/*
+ * Sets current XY position to be (0,0)
+ */
+void setHomeXY(){
+  currentX = 0.0;
+  currentY = 0.0;
+}
+
+/*
+ * Sets current Z position to be 0
+ */
+void setHomeZ(){
+	currentZ = 0.0;
+}
+
+/*
+ * Moves the toolhead on XY to coordinates
+ */
+void moveXYAbsolute(float x, float y){
+  moveXYRelative(x-currentX, y-currentY);
+  currentX = x;
+  currentY = y;
+}
+
+/*
+ * Moves the z axis up or down by a given value
+ */
+void moveZRelative(float z) {
+	float ZmicrostepsPerMM = Z_STEPS_PER_MM * MICROSTEP_FACTOR_Z;
+
+	pinWrite(Z,dir0, z < 0);
+	unsigned long delay = 1000000/(speed * ZmicrostepsPerMM);
+
+	float travelDistance = fabs(z);
+	unsigned long steps = ZmicrostepsPerMM * travelDistance;
+	for(; steps > 0; steps --){
+		pinWrite(Z, step,1);
+		delayMicro(10);
+		pinWrite(Z, step,0);
+		delayMicro(delay);
+	}
+}
+
+/*
+ * Moves the z axis to a given height
+ */
+void moveZAbsolute(float z){
+	moveZRelative(z-currentZ);
+	currentZ = z;
+}
+
+/*
+ * Calculates the distance in mm that will be covered in a given time, in seconds
+ * Uses speed (mm/s) and acceleration(mm/s^2)
+ */
+float calcDistance(float time, float speed, float acceleration){
+	return (0.5 * acceleration * pow(time,2)) + (speed * time);
+}
+
+
+
+/*
+ * Moves a piece between two squares
+ * Takes the coordintes of the start and end squares, along with the height of the piece
+ */
+void movePiece(float startX, float startY, float endX, float endY, float pieceZ){
+
+	// Move to the travel height, if not there already
+	moveZAbsolute(TRAVEL_Z);
+
+	// Move the the starting square
+	moveXYAbsolute(startX,startY);
+
+	// Turn on the magnet
+	setMagnet(0);
+
+	// Move down to grab the piece
+	moveZAbsolute(pieceZ);
+
+	delayMicro(10000);
+
+	// Piece is now grabbed
+
+	// Move up to be above the other pieces
+	moveZAbsolute(MOVE_Z-(arr[5].value - pieceZ - arr[0].value));
+
+	// Move to target square
+	moveXYAbsolute(endX,endY);
+
+	// Move down to board
+	moveZAbsolute(pieceZ);
+
+	// Release the piece
+	setMagnet(1);
+	delayMicro(10000);
+
+	// Move back up to travel height
+	moveZAbsolute(TRAVEL_Z);
+}
+
+/*
+ * Moves to the standby position described in motor.h, to be out of the way of the player and the camera
+ */
+void moveToStandbyPosition(){
+	// Move to the travel height, if not there already
+	moveZAbsolute(TRAVEL_Z);
+
+	// Move to target square
+	moveXYAbsolute(STANDBY_X,STANDBY_Y);
+}
+
+/*
+ * Moves piece using indexes for starting square, ending square, and piece height
+ */
+void movePieceByIndex(int startIndex, int endIndex, int pieceIndex){
+	point startPoint = getCoordsFromIndex(startIndex);
+	point endPoint = getCoordsFromIndex(endIndex);
+	float pieceHeight = arr[pieceIndex].value - arr[0].value;
+	movePiece(startPoint.x, startPoint.y, endPoint.x, endPoint.y, pieceHeight);
+
+}
+
+/*
+ * Uses index to get the XY coordinates of a square on the board
+ */
+point getCoordsFromIndex(int index){
+	if(index > 63 && index < 81){
+		return whiteCaptured[index-64];
+	} else if (index >= 81){
+		return blackCaptured[index-81];
+	} else {
+		return board[index];
+	}
+}
