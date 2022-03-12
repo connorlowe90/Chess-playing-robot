@@ -1,0 +1,4 @@
+board.c:21:6:initPins	4	static
+board.c:28:6:pinWrite	24	static
+board.c:73:6:setMagnet	24	static
+board.c:79:6:delayMicro	16	static

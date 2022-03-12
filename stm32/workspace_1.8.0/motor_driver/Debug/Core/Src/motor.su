@@ -1,0 +1,12 @@
+motor.c:33:6:moveXYRelative	240	static
+motor.c:152:6:moveXYAbsolute	16	static
+motor.c:161:6:setDirection	24	static
+motor.c:174:6:setHomeXY	4	static
+motor.c:183:6:setHomeZ	4	static
+motor.c:190:6:moveZRelative	32	static
+motor.c:209:6:moveZAbsolute	16	static
+motor.c:218:7:calcDistance	32	static
+motor.c:226:6:movePiece	40	static
+motor.c:265:6:moveToStandbyPosition	8	static
+motor.c:276:6:movePieceByIndex	48	static
+motor.c:287:7:getCoordsFromIndex	32	static

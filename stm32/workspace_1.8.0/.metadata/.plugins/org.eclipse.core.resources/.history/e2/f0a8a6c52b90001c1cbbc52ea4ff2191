@@ -1,0 +1,220 @@
+#include "motor.h"
+//#include <Arduino.h>    // Only for serial debug messages
+
+// Current position of the toolhead
+float currentX = 0.0;
+float currentY = 0.0;
+
+// Moves the X and Y axes in sync so the toolhead moves in a straight line. Moves relative to current position
+void moveXYRelative(float x, float y, float speed, float acceleration){
+	float XYmicrostepsPerMM = XY_STEPS_PER_MM * MICROSTEP_FACTOR;
+
+	setDirection(x,y);
+	float distanceX = fabs(x);
+	float distanceY = fabs(y);
+
+	float angle;
+
+	if(x == 0){
+		angle = PI/2;
+	} else {
+		angle = atan(distanceY/distanceX);
+	}
+
+
+	// X vars
+	float speedX = cos(angle) * speed;
+	float accelTimeX = speedX/acceleration;
+	float accelDistanceX = calcDistance(accelTimeX, 0, acceleration);
+	float coastDistanceX = distanceX - (2*accelDistanceX);
+	float coastTimeX = coastDistanceX/speedX;
+
+	if(coastTimeX < 0){
+		speedX = sqrt(distanceX/acceleration);
+		accelTimeX = speedX/acceleration;
+		accelDistanceX = calcDistance(accelTimeX, 0, acceleration);
+		coastTimeX = 0;
+		coastDistanceX = 0;
+	}
+
+	unsigned long accelTime_usX = accelTimeX * 1000000;
+	unsigned long coastTime_usX = coastTimeX * 1000000;
+
+	unsigned long stepsX = XYmicrostepsPerMM * distanceX;
+	unsigned long pulseLengthX = 1000000/XYmicrostepsPerMM;
+	float currentSpeedX = 1;
+
+	// Y vars
+	float speedY = sin(angle) * speed;
+	float accelTimeY = speedY/acceleration;
+	float accelDistanceY = calcDistance(accelTimeY, 0, acceleration);
+	float decelDistanceY = calcDistance(accelTimeY, speedY, acceleration);
+	float coastDistanceY = distanceY - (2*accelDistanceY);
+	float coastTimeY = coastDistanceY/speedY;
+
+	if(coastTimeY < 0){
+		speedY = sqrt(distanceY/acceleration);
+		accelTimeY = speedY/acceleration;
+		accelDistanceY = calcDistance(accelTimeY, 0, acceleration);
+		coastTimeY = 0;
+		coastDistanceY = 0;
+	}
+
+	unsigned long accelTime_usY = accelTimeY * 1000000;
+	unsigned long coastTime_usY = coastTimeY * 1000000;
+
+	unsigned long stepsY = XYmicrostepsPerMM * distanceY;
+	unsigned long pulseLengthY = 1000000/XYmicrostepsPerMM;
+	float currentSpeedY = 1;
+
+
+
+
+	// Time
+	unsigned long time = 0;
+	unsigned long pulseTimerX = 0;
+	unsigned long pulseTimerY = 0;
+	unsigned long timeStep = 10;
+
+	while(stepsX > 0 || stepsY > 0){
+		delayMicro(timeStep);
+		time += timeStep;
+		pulseTimerX += timeStep;
+		pulseTimerY += timeStep;
+
+		// Update X
+		if(stepsX > 0 && pulseTimerX >= pulseLengthX){
+			pulseTimerX = 0;
+			if(time <= accelTime_usX){
+				currentSpeedX = (acceleration * time)/1000000;
+			} else if(time > accelTime_usX && time <= (accelTime_usX + coastTime_usX)){
+				currentSpeedX = speed;
+			} else {
+				currentSpeedX = speed - (acceleration * (time-(accelTime_usX + coastTime_usX)))/1000000;
+			}
+			pulseLengthX = 1000000/(currentSpeedX * XYmicrostepsPerMM);
+			pinWrite(X, step,1);
+			delayMicro(10);
+			pinWrite(X, step,0);
+			time += 10;
+			pulseTimerX += 10;
+			pulseTimerY += 10;
+			stepsX--;
+		}
+
+		// Update Y
+		if(stepsY > 0 && pulseTimerY >= pulseLengthY){
+			pulseTimerY = 0;
+			if(time <= accelTime_usY){
+				currentSpeedY = (acceleration * time)/1000000;
+			} else if(time > accelTime_usY && time <= (accelTime_usY + coastTime_usY)){
+				currentSpeedY = speed;
+			} else {
+				currentSpeedY = speed - (acceleration * (time-(accelTime_usY + coastTime_usY)))/1000000;
+			}
+			pulseLengthY = 1000000/(currentSpeedY * XYmicrostepsPerMM);
+			pinWrite(Y, step,1);
+			delayMicro(10);
+			pinWrite(Y, step,0);
+			time += 10;
+			pulseTimerX += 10;
+			pulseTimerY += 10;
+			stepsY--;
+		}
+
+	}
+
+}
+
+// Set the directions of the XY motors
+void setDirection(float x, float y){
+  bool directionX = x >= 0;
+  bool directionY = y >= 0;
+  pinWrite(X, dir0, directionX);
+  pinWrite(X, dir1, !directionX);
+  pinWrite(Y, dir0, directionY);
+  pinWrite(Y, dir1, !directionY);
+}
+
+void setHome(){
+  currentX = 0.0;
+  currentY = 0.0;
+}
+
+void moveXYAbsolute(float x, float y, float speed, float accel){
+  moveXYRelative(x-currentX, y-currentY, speed, accel);
+  currentX = x;
+  currentY = y;
+}
+
+void moveAxisRelative(axis moveAxis, float distance, float speed, float acceleration){
+	float XYmicrostepsPerMM = XY_STEPS_PER_MM * MICROSTEP_FACTOR;
+
+	int direction = distance >= 0;
+	pinWrite(moveAxis, dir0, directionX);
+	pinWrite(moveAxis, dir1, !directionX);
+
+	float maxSpeed = speed;
+	float accelTime = speed/acceleration;
+	float accelDistance = calcDistance(accelTime, 0, acceleration);
+	float coastDistance = distance - (2*accelDistance);
+	float coastTime = coastDistance/speed;
+
+	if(coastTime < 0){
+		speed = sqrt(distance/acceleration);
+		accelTime = speed/acceleration;
+		accelDistance = calcDistance(accelTime, 0, acceleration);
+		coastTime = 0;
+		coastDistance = 0;
+	}
+
+	unsigned long accelTime_us = accelTime * 1000000;
+	unsigned long coastTime_us = coastTime * 1000000;
+
+	unsigned long steps = XYmicrostepsPerMM * distance;
+	unsigned long pulseLength = 1000000/XYmicrostepsPerMM;
+	float currentSpeed = 1;
+
+	unsigned long time = 0;
+	unsigned long pulseTimer = 0;
+	unsigned long timeStep = 10;
+
+	while(steps > 0){
+		delayMicro(timeStep);
+		time += timeStep;
+		pulseTimer += timeStep;
+
+		if(pulseTimer >= pulseLength){
+			pulseTimer = 0;
+			if(time <= accelTime_us){
+				currentSpeed = (acceleration * time)/1000000;
+			} else if(time > accelTime_us && time <= (accelTime_us + coastTime_us)){
+				currentSpeed = speed;
+			} else {
+				currentSpeed = speed - (acceleration * (time-(accelTime_us + coastTime_us)))/1000000;
+			}
+			pulseLength = 1000000/(currentSpeed * XYmicrostepsPerMM);
+			pinWrite(moveAxis, step,1);
+			delayMicro(10);
+			pinWrite(moveAxis, step,0);
+			time += 10;
+			pulseTimer += 10;
+			steps--;
+		}
+
+	}
+}
+
+float calcDistance(float time, float speed, float acceleration){
+	return (0.5 * acceleration * pow(time,2)) + (speed * time);
+}
+
+unsigned long gcd_recurse(unsigned long a, unsigned long b) {
+  if (b == 0) return a;
+  if (a == 0) return b;
+  if (b > a) {
+    return gcd_recurse(a, b % a);
+  }
+
+  return gcd_recurse(b, a % b);
+}
