@@ -1,3 +1,10 @@
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+
 import cv2
 import numpy as np
 from skimage import data,io,filters

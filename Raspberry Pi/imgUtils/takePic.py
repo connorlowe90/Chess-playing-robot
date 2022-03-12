@@ -1,3 +1,12 @@
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file takes a picture of the board
+# for a blank board.
+
 import cv2
 
 # takes a picture using cv2 and returns the frame

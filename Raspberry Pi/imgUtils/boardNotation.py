@@ -1,3 +1,13 @@
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file is for dealing with board notation for
+# piece locations, captured/capaturing pieces, castling, 
+# player moves.
+
 import chess
 import sys
 sys.path.insert(1, '//home/pi/Embedded-Capstone')
@@ -59,7 +69,7 @@ def getPieceIter(piece, array):
 	c = 0
 	for i in array:
 		if i == piece:
-			c = c + 1;
+			c = c + 1
 	return c
 
 # checks to see if a piece is captured 
@@ -83,15 +93,15 @@ def check_captured_move(move, board):
     if (pieceCap != None):
 		# start position
 		startPosition = ''.join(moveArray2[2:4])
-		fromIndex = returnIndexSTM(returnIndexOf(startPosition, chessboard));
-		
+		fromIndex = returnIndexSTM(returnIndexOf(startPosition, chessboard))
+
 		# ending position
 		capWhite.append(pieceCap)
 		count = getPieceIter(pieceCap, capWhite)
 		endPosition = str(pieceCap) + str(pieceCap) + str(count)
-		
+
 		# changed non cap white to chessboard
-		toIndex = returnIndexOf(endPosition, chessboard);
+		toIndex = returnIndexOf(endPosition, chessboard)
 		return pieceCap, fromIndex, toIndex	
     
     return None, None. None
@@ -104,8 +114,8 @@ def getMoveBlackIndices(board, indexOut):
 		fmoveArray.append(i)
 	  
 	for i in range(0, 8):
-	  if(fmoveArray[0] == dArray2[i]):
-		fmoveArray[0] = dArray1[i] - 1
+		if(fmoveArray[0] == dArray2[i]):
+			fmoveArray[0] = dArray1[i] - 1
 	fmoveArray[1] = int(fmoveArray[1]) - 1
 	piece = board.piece_at(chess.square(int(fmoveArray[0]), int(fmoveArray[1])))
 	pieceIndex = returnIndexOf(str(piece).lower(), pieceSymbolNums)
@@ -213,7 +223,8 @@ def formatMove(board, stockfish, move, diff):
 		toSTM = str(toSTM) + str(piece2) + ',' + str(move21) + ',' + str(move22) + '/$'
 		return toSTM, None
 
-# gets user move from 2 images
+# getMove() is a function that gets user move 
+# from 2 images
 def getMove(imgB, imgA, imgBlank):
 	# window slide and save 64 images X 2 (before and after)
 	imgASlide, imgBSlide = getImgSlide(imgA, imgB)

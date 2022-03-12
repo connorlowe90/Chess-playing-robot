@@ -1,3 +1,13 @@
+# Kellen Hartnett
+# Adrian Lewis
+# Connor Lowe
+# Sahibjeet Singh
+# Garrett Tashiro
+# EE 475, Group 5 Capstone Project
+# This file is for detecting/finding the corners of the
+# chess board, cropping, along with rotating the image  
+# as needed for camera placement
+
 # imports 
 import cv2
 import numpy as np
