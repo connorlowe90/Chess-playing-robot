@@ -4,7 +4,7 @@
 # Sahibjeet Singh
 # Garrett Tashiro
 # EE 475, Group 5 Capstone Project
-# For taking a blank picture of the chess board
+# For taking a blank picture of the chess
 
 import os
 

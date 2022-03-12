@@ -4,6 +4,7 @@
 # Sahibjeet Singh
 # Garrett Tashiro
 # EE 475, Group 5 Capstone Project
+# Processes the images to detect moves based on structual simularity
 
 import cv2
 import numpy as np
