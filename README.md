@@ -1,4 +1,4 @@
-# Embedded-Capstone
+# Chess playing robot
 Hello World
 
 ### Python Environments Setup
